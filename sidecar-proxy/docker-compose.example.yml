@@ -1,0 +1,19 @@
+# Example: sit VerditNxtGen sidecar between IBM ContextForge and your Qdrant MCP tool
+version: "3.9"
+services:
+  verdit-sidecar:
+    build: .
+    environment:
+      VERDIT_API_KEY:    "${VERDIT_API_KEY}"
+      DOWNSTREAM_URL:    "http://qdrant-mcp:3000"
+      PROXY_PORT:        "8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - qdrant-mcp
+
+  qdrant-mcp:
+    image: qdrant/qdrant:latest
+    ports:
+      - "6333:6333"
+# Point your gateway at http://verdit-sidecar:8080 instead of qdrant-mcp:3000
