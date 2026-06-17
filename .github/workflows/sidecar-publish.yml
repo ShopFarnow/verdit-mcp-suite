@@ -1,0 +1,68 @@
+# ════════════════════════════════════════════════════════════════════════════
+# sidecar-publish.yml — Build and push verditnxtgen-sidecar to GitHub
+# Container Registry (ghcr.io/shopfarnow/verditnxtgen-sidecar)
+#
+# Triggers:
+#   - Push to main that changes sdk/sidecar-proxy/**
+#   - Manual workflow_dispatch
+#
+# Required: GITHUB_TOKEN (automatic) — no extra secrets needed for ghcr.io
+# ════════════════════════════════════════════════════════════════════════════
+name: Sidecar Proxy — Build & Push to GHCR
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sidecar-proxy/**'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Image tag (default: latest)"
+        default: "latest"
+        required: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  REGISTRY: ghcr.io
+  IMAGE_NAME: shopfarnow/verditnxtgen-sidecar
+
+jobs:
+  build-and-push:
+    name: Build and push sidecar Docker image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ inputs.tag || 'latest' }}
+            type=sha,prefix=sha-
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: sidecar-proxy
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Verify image is pullable
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.tag || 'latest' }}
+          echo "✓ Image verified: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}"
