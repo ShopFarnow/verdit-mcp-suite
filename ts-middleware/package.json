@@ -1,0 +1,33 @@
+{
+  "name": "verditnxtgen-mcp-middleware",
+  "version": "1.0.0",
+  "description": "One-line MCP middleware for VerditNxtGen cryptographic ledger. npm install verditnxtgen-mcp-middleware",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ai-security",
+    "verditnxtgen"
+  ],
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": ">=1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  },
+  "files": [
+    "dist/",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ShopFarnow/VerditNxtGen.git"
+  },
+  "license": "MIT"
+}
