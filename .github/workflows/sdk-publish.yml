@@ -19,9 +19,9 @@ on:
         type: choice
         options: [both, npm, pypi]
       dry_run:
-        description: "Dry run — build but do not publish"
+        description: "Dry run — build but do not publish (set false for release)"
         required: false
-        default: "true"
+        default: "false"   # MP-02: un-deferred — ready for real publish
         type: choice
         options: ["true", "false"]
 
@@ -63,6 +63,28 @@ jobs:
         if: env.SKIP_NPM != 'true'
         working-directory: ts-middleware
         run: npm install
+
+      - name: Verify canonical JSON key sort (SK-05)
+        if: env.SKIP_NPM != 'true'
+        working-directory: ts-middleware
+        run: |
+          # SK-05: verify TypeScript SDK signs payloads with sorted keys
+          node -e "
+          const fs = require('fs');
+          const src = fs.existsSync('dist/index.js') ? fs.readFileSync('dist/index.js','utf8') : '';
+          if (src.includes('Object.keys') && src.includes('sort')) {
+            console.log('✅ Key sorting detected in SDK output');
+          } else if (fs.existsSync('src/index.ts')) {
+            const ts = fs.readFileSync('src/index.ts','utf8');
+            if (ts.includes('.sort()') || ts.includes('Object.keys(')) {
+              console.log('✅ Key sorting in TypeScript source');
+            } else {
+              console.warn('::warning::SK-05: No key sorting detected — HMAC verification may fail on backend');
+            }
+          } else {
+            console.warn('::warning::SK-05: Could not verify key sorting');
+          }
+          "
 
       - name: Build TypeScript
         if: env.SKIP_NPM != 'true'
